@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import * as PIXI from "pixi.js";
+
+// @ts-ignore
+window.PIXI = PIXI
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
