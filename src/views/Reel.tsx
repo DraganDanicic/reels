@@ -1,26 +1,42 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Container, usePixiTicker } from "react-pixi-fiber/index";
 import { tokenMap } from "../sprites/SlotToken";
 
 export type Token = keyof typeof tokenMap
 
-const Reel = ({ tokenList, target, right}: { tokenList: Token[], target: number, right: number}) => {
+const Reel = ({ tokenList, target, right, reelHight }: { tokenList: Token[], target: number, right: number, reelHight: number }) => {
 
-  console.log(tokenList)
-  const baseOffset = -100 * tokenList.length + 700;
-  const targetOffset = (target - 1) * 100;
-  const step = targetOffset / 50
+  const [st, setSt] = useState({
+    baseOffset: -100 * tokenList.length + reelHight,
+    targetOffset: target * 100 ,
+    step: target * 100 / 50,
+  });
+
+  useEffect(() => {
+    setSt({
+      baseOffset: -100 * tokenList.length + reelHight,
+      targetOffset: (target - 1) * 100 ,
+      step: (target - 1) * 100 / 50,
+    })
+  }, [tokenList, reelHight, target])
+
   const [topOffset, setTopOffset] = useState(0)
+
   const animate = useCallback(() => {
-      setTopOffset(prev => targetOffset > prev ? prev + 0.5 + step - step * (prev / targetOffset): prev)
-  }, [])
+    // Simple easing...
+    setTopOffset(prev => st.targetOffset > prev ? prev + 0.5 + st.step - st.step * (prev / st.targetOffset) : prev)
+  }, [st, tokenList, target, reelHight])
+
+  useEffect(() => {
+    setTopOffset(0)
+  }, [tokenList])
 
   usePixiTicker(animate)
 
   return (
 
-    <Container x={right} y={ baseOffset + topOffset}>
-      {tokenList.map((t, i) => React.createElement(tokenMap[t], { x: 100, y: (i + 1) * 100, key: t + i}))}
+    <Container x={right} y={st.baseOffset + topOffset}>
+      {[...tokenList].reverse().map((t, i) => React.createElement(tokenMap[t], { x: 100, y: (i + 1) * 100 - 50, key: t + i }))}
     </Container>
   )
 }
