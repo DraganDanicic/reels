@@ -4,19 +4,19 @@ import { tokenMap } from "../sprites/SlotToken";
 
 export type Token = keyof typeof tokenMap
 
-const Reel = ({ tokenList, target, right, reelHight }: { tokenList: Token[], target: number, right: number, reelHight: number }) => {
+const Reel = ({ tokenList, target, right, reelHight, speed }: { tokenList: Token[], target: number, right: number, reelHight: number, speed: number }) => {
 
   const [st, setSt] = useState({
     baseOffset: -100 * tokenList.length + reelHight,
     targetOffset: target * 100 ,
-    step: target * 100 / 50,
+    step: target * 100 /  speed,
   });
 
   useEffect(() => {
     setSt({
       baseOffset: -100 * tokenList.length + reelHight,
       targetOffset: (target - 1) * 100 ,
-      step: (target - 1) * 100 / 50,
+      step: (target - 1) * 100 / speed,
     })
   }, [tokenList, reelHight, target])
 
