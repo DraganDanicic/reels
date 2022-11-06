@@ -22,6 +22,7 @@ const Reel = ({ tokenList, target, right, reelHight }: { tokenList: Token[], tar
 
   const [topOffset, setTopOffset] = useState(0)
 
+  // TODO: Animation should depend on dT.
   const animate = useCallback(() => {
     // Simple easing...
     setTopOffset(prev => st.targetOffset > prev ? prev + 0.5 + st.step - st.step * (prev / st.targetOffset) : prev)
