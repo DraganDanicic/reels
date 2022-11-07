@@ -1,6 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { genTokenList } from "../../generator/generateTokens";
 import { tokenMap } from "../../sprites/SlotToken";
+import { betLost, betWon, placeBet } from "../../store/potReducer";
+import { RootState } from "../../store/store";
 import ReelBoard from "../ReelBoard"
 
 import './GameScreen.css';
@@ -19,9 +22,17 @@ const calcWinStatus = (reels: (keyof typeof tokenMap)[][], line: [number, number
 }
 
 export default () => {
-  const reelLen = 50
+  const reelLen = 50;
   const [reels, setReels] = useState(Array.apply(null, Array(5)).map(e => genTokenList(reelLen)))
+  const [midHLine, setMidHLine] = useState<[number, number, number, number, number]>([2, 2, 2, 2, 2])
+  const [winMessage, setWinMessage] = useState('Spinning...')
+  const winStatus = useMemo(() => calcWinStatus(reels, midHLine), [reels, midHLine])
+  const [balance, bet] = useSelector<RootState, [number, number]>(state => [state.pot.balance, state.pot.bet]);
+
+  const dispatch = useDispatch()
+
   const spin = () => setReels(prev => {
+    setWinMessage('Spinning...');
     return Array.apply(null, Array(5)).map((e, i) => {
       return [
         reels[i][midHLine[i] - 1],
@@ -31,10 +42,28 @@ export default () => {
       ]
     })
   })
-  const midHLine = useMemo(() =>
-    Array.apply(null, Array(5)).map((e, i) => calcEndingToken(reels[i])) as [number, number, number, number, number],
+
+  useEffect(() =>
+    setMidHLine(Array.apply(null, Array(5)).map((e, i) => calcEndingToken(reels[i])) as [number, number, number, number, number]),
     [reels])
-  const spinStatus = useMemo(() => calcWinStatus(reels, midHLine), [reels, midHLine])
+
+  useEffect(() => {
+    window.setTimeout(() => {
+
+      setWinMessage(
+        winStatus[1] > 2 ? `You have sum of ${winStatus[1]} ${winStatus[0]}s` : 'Better luck next time'
+      )
+      if (winStatus[1] > 2) {
+        dispatch(betWon(bet * (winStatus[1] - 2)))
+      } else {
+        dispatch(betLost())
+      }
+    }, 10500)
+  }, [winStatus, bet]
+  )
+ /// BET * {1,2,3} * FACTOR E {2...10}
+
+
 
   return (
     <div id="game-container">
@@ -46,7 +75,12 @@ export default () => {
 
       <div id="game-controls" >
         <div className="fancy-button" onClick={spin}>Spin</div>
-        <div className="fancy-button">{spinStatus[1] > 0 ? `You have sum of ${spinStatus[1]} ${spinStatus[0]}s` : 'Better luck next time'}</div>
+        <div className="fancy-button">{winMessage}</div>
+        <div className="fancy-button">Balance {balance}$</div>
+        <div className="fancy-button">Pot {bet}$</div>
+        <div className="fancy-button" onClick={() => dispatch(placeBet(1))}>Bet 1$</div>
+        <div className="fancy-button" onClick={() => dispatch(placeBet(5))}>Bet 5$</div>
+        <div className="fancy-button" onClick={() => dispatch(placeBet(10))}>Bet 10$</div>
       </div>
     </div>
   )
